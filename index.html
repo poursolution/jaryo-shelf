@@ -1,0 +1,612 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>자료 정리함</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: 사용자 디자인(자료 정리함) 유지 — 상단 고정 헤더(검색·링크 추가) → 브랜드 칩 → 브랜드별 카드 묶음 → 우측 요약 패널(탭 + 같은 브랜드 목록) */
+:root{
+  --ink:#212A3E; --slate:#394867; --mist:#9BA4B5; --wash:#F1F6F9; --tint:#E4EDF5; --soft:#F7F9FB;
+  --peach:#FFE8DB; --peachfg:#6B4430; --warnbg:#FFF3EC; --sub:#768194; --line:#D8DEE6; --bg:#FFFFFF; --star:#C98A3D;
+  --font:'Pretendard Variable','Pretendard','Noto Sans KR',-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg)}
+body{color:var(--ink);font-family:var(--font);font-size:15px;line-height:1.6;letter-spacing:-0.01em;-webkit-font-smoothing:antialiased}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+button,input,textarea,select{font:inherit;color:inherit}
+a{color:var(--slate)} a:hover{color:var(--ink)}
+input:focus,textarea:focus,select:focus{outline:none;border-color:var(--slate)!important;box-shadow:0 0 0 3px rgba(57,72,103,.15)}
+:focus-visible{outline:2px solid var(--slate);outline-offset:2px}
+@keyframes jr-slide{from{transform:translateX(100%)}to{transform:translateX(0)}}
+@keyframes jr-fade{from{opacity:0}to{opacity:1}}
+@media (prefers-reduced-motion:reduce){.drawer,.scrim{animation:none!important}}
+.in{max-width:1180px;margin:0 auto;padding-left:max(24px,env(safe-area-inset-left,0px));padding-right:max(24px,env(safe-area-inset-right,0px))}
+@media (max-width:560px){.in{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}}
+
+header.top{background:var(--bg);border-bottom:1px solid var(--line);position:sticky;top:env(safe-area-inset-top,0px);z-index:10}
+header.top .in{padding-block:12px;display:flex;flex-wrap:wrap;gap:10px 20px;align-items:center}
+.brandline{display:flex;align-items:baseline;gap:10px}
+.brandline h1{margin:0;font-size:18px;font-weight:700;white-space:nowrap}
+.brandline span{font-size:12.5px;color:var(--sub);white-space:nowrap;font-variant-numeric:tabular-nums}
+#q{flex:1 1 220px;min-width:0;border:1px solid var(--line);border-radius:6px;background:var(--soft);padding:7px 12px;font-size:14px}
+.btn-dark{border:0;border-radius:6px;background:var(--ink);color:#fff;padding:8px 16px;font-size:14px;font-weight:600;cursor:pointer;white-space:nowrap}
+.btn-dark:hover{background:var(--slate)}
+.btn-slate{border:0;border-radius:6px;background:var(--slate);color:#fff;padding:9px 16px;font-weight:600;cursor:pointer}
+.btn-slate:hover{background:var(--ink)} .btn-slate:disabled{opacity:.55;cursor:default}
+.btn-line{border:1px solid var(--line);border-radius:6px;background:transparent;color:var(--slate);padding:5px 11px;font-size:13px;cursor:pointer}
+.btn-line:hover{background:var(--wash)}
+.btn-line.danger[data-armed="true"]{background:var(--peach);border-color:var(--peach);color:var(--peachfg);font-weight:600}
+
+.addpanel{background:var(--wash);border-bottom:1px solid var(--line)}
+.addpanel form{padding-block:18px;display:grid;grid-template-columns:minmax(0,1fr) 260px;gap:12px 16px;align-items:start}
+.field{display:flex;flex-direction:column;gap:6px;min-width:0}
+.field label{font-size:13px;font-weight:600}
+.field textarea,.addside select,.addside input{border:1px solid var(--line);border-radius:6px;background:var(--bg);padding:9px 12px;resize:vertical;width:100%}
+.addside{display:flex;flex-direction:column;gap:8px;padding-top:27px}
+.addside select,.addside input{padding:8px 10px}
+.hint{font-size:12.5px;color:var(--sub)}
+.msg{font-size:12.5px;color:var(--slate);min-height:1.2em}
+@media (max-width:720px){.addpanel form{grid-template-columns:1fr}.addside{padding-top:0}}
+
+nav.chips{padding-top:16px;display:flex;flex-wrap:wrap;gap:6px}
+.chip{display:flex;align-items:center;gap:7px;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:999px;padding:5px 13px;font-size:13.5px;font-weight:500;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:#fff;font-weight:600}
+.chip .n{font-size:12px;opacity:.7;font-variant-numeric:tabular-nums}
+.chip .st{color:var(--star)} .chip[aria-pressed="true"] .st{color:#F3C98B}
+
+main{padding-block:20px 56px;display:flex;flex-direction:column;gap:32px}
+.empty{padding:40px 4px;color:var(--sub);display:flex;flex-direction:column;gap:4px}
+.empty b{color:var(--ink);font-size:16px}
+.ghead{display:flex;align-items:baseline;justify-content:space-between;gap:12px;border-bottom:2px solid var(--ink);padding-bottom:6px}
+.ghead h2{margin:0;font-size:17px;font-weight:700}
+.ghead span{font-size:12.5px;color:var(--sub)}
+section.group{display:flex;flex-direction:column;gap:12px}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}
+@media (max-width:400px){.cards{grid-template-columns:1fr}}
+.card{position:relative;border:1px solid var(--line);background:var(--bg);border-radius:8px;padding:16px;display:flex;flex-direction:column;gap:8px;text-align:left;width:100%;cursor:pointer;color:var(--ink);min-width:0}
+.card:hover{border-color:var(--slate);box-shadow:0 2px 10px rgba(33,42,62,.07)}
+.card[aria-current="true"]{border-color:var(--slate);background:var(--wash)}
+.cmeta{display:flex;flex-wrap:wrap;gap:4px 10px;align-items:center;font-size:12px;color:var(--sub);padding-right:28px}
+.cmeta .cat{font-weight:600;color:var(--slate)} .cmeta .src{font-weight:500}
+.pend{background:var(--peach);color:var(--peachfg);padding:0 7px;border-radius:4px;font-weight:600;font-size:11.5px}
+.ctitle{font-size:16px;font-weight:600;line-height:1.4;text-wrap:pretty}
+.csum{font-size:13.5px;color:var(--slate);line-height:1.55;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.cfoot{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:12px;color:var(--sub);margin-top:auto;padding-top:4px;font-variant-numeric:tabular-nums}
+.cfoot b{color:var(--slate);font-weight:600}
+.star{position:absolute;top:10px;right:10px;border:0;background:transparent;cursor:pointer;font-size:18px;line-height:1;padding:4px;color:var(--mist)}
+.star:hover{color:var(--star)} .star[aria-pressed="true"]{color:var(--star)}
+
+.scrim{position:fixed;inset:0;background:rgba(33,42,62,.32);z-index:20;animation:jr-fade .2s ease-out}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:min(920px,100%);background:var(--bg);z-index:21;display:flex;box-shadow:-12px 0 40px rgba(33,42,62,.18);animation:jr-slide .28s cubic-bezier(.2,.8,.2,1);
+  padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);padding-right:env(safe-area-inset-right,0px)}
+.dmain{flex:1;min-width:0;display:flex;flex-direction:column}
+.dhead{padding:20px 24px 14px;display:flex;flex-direction:column;gap:8px;border-bottom:1px solid var(--line)}
+.drow{display:flex;justify-content:space-between;gap:12px;align-items:center}
+.dmeta{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;font-size:12.5px;color:var(--sub)}
+.dmeta .b{font-weight:700;color:var(--ink)} .dmeta .c{font-weight:600;color:var(--slate)}
+.close{border:0;background:transparent;cursor:pointer;font-size:24px;line-height:1;color:var(--sub);padding:2px 6px}
+.close:hover{color:var(--ink)}
+.dhead h2{margin:0;font-size:21px;font-weight:700;line-height:1.35;text-wrap:pretty}
+.dhead p{margin:0;font-size:15px;color:var(--slate);text-wrap:pretty}
+.dtools{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding-top:4px}
+.dtools a.open{display:flex;align-items:center;border-radius:6px;background:var(--slate);color:#fff;padding:6px 13px;font-size:13.5px;font-weight:600;text-decoration:none}
+.dtools select{border:1px solid var(--line);border-radius:6px;background:var(--bg);padding:5px 9px;font-size:13.5px;max-width:100%}
+.favbtn{display:flex;align-items:center;gap:5px;border:1px solid var(--line);border-radius:6px;background:var(--bg);padding:5px 12px;font-size:13.5px;font-weight:600;color:var(--slate);cursor:pointer}
+.favbtn[aria-pressed="true"]{border-color:var(--star);color:var(--star);background:#FFF8EE}
+.tabs{display:flex;border-bottom:1px solid var(--line);padding:0 14px;overflow-x:auto}
+.tab{display:flex;align-items:center;gap:5px;border:0;background:transparent;padding:10px 12px;cursor:pointer;color:var(--sub);font-weight:500;border-bottom:2px solid transparent;margin-bottom:-1px;font-size:14.5px;white-space:nowrap}
+.tab[aria-selected="true"]{color:var(--ink);font-weight:600;border-bottom-color:var(--slate)}
+.tab .n{font-size:12px;opacity:.7;font-variant-numeric:tabular-nums}
+.dbody{flex:1;overflow-y:auto;padding:16px 24px 24px;display:flex;flex-direction:column;gap:10px}
+.dbody ul{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:10px}
+.dbody li{font-size:14.5px;line-height:1.7;padding:11px 13px;border:1px solid var(--line);border-radius:6px;background:var(--bg);text-wrap:pretty}
+.dbody.warn li{background:var(--warnbg);border-color:var(--peach)}
+.loc{display:inline-block;font-size:12px;font-weight:600;color:var(--slate);background:var(--tint);border-radius:4px;padding:0 6px;margin-right:6px}
+.fill{display:flex;flex-direction:column;gap:8px}
+.fill p{margin:0;font-size:14.5px;color:var(--sub);line-height:1.7}
+.fill textarea{border:1px solid var(--line);border-radius:6px;background:var(--bg);padding:9px 12px;resize:vertical;width:100%}
+.fill .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.dfoot{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;padding:12px 24px;border-top:1px solid var(--line)}
+.tags{display:flex;flex-wrap:wrap;gap:8px}
+.tags span{font-size:12.5px;color:var(--sub)}
+.sibs{width:250px;flex-shrink:0;border-left:1px solid var(--line);background:var(--soft);display:flex;flex-direction:column}
+.sibs .h{padding:22px 18px 10px;display:flex;justify-content:space-between;align-items:baseline;gap:8px;border-bottom:1px solid var(--line)}
+.sibs .h b{font-size:14px;font-weight:700} .sibs .h span{font-size:12px;color:var(--sub)}
+.sibs .l{flex:1;overflow-y:auto;padding:8px;display:flex;flex-direction:column;gap:2px}
+.sib{border:0;border-radius:6px;background:transparent;padding:9px 10px;display:flex;flex-direction:column;gap:2px;text-align:left;width:100%;cursor:pointer;color:var(--ink)}
+.sib:hover{background:var(--tint)}
+.sib[aria-current="true"]{background:var(--bg);box-shadow:inset 3px 0 0 var(--slate),0 1px 3px rgba(33,42,62,.08)}
+.sib .c{font-size:11.5px;color:var(--sub)} .sib .t{font-size:13.5px;font-weight:500;line-height:1.4}
+.sib[aria-current="true"] .t{font-weight:600}
+@media (max-width:779px){.sibs{display:none}}
+@media (max-width:520px){.dhead,.dbody{padding-left:16px;padding-right:16px}.dfoot{padding-left:16px;padding-right:16px}}
+.dtools .pagebtn{display:flex;align-items:center;border:1px solid var(--line);border-radius:6px;padding:5px 12px;font-size:13.5px;font-weight:600;color:var(--slate);background:var(--bg);cursor:pointer}
+.dtools .pagebtn:hover{background:var(--wash)}
+
+/* 자료 전용 페이지 */
+.pbar{background:var(--ink);color:#fff;position:sticky;top:env(safe-area-inset-top,0px);z-index:10}
+.pbar .wrap860{padding-block:14px;display:flex;justify-content:space-between;align-items:center;gap:12px}
+.pbar .home{border:0;background:transparent;color:#fff;font-weight:700;font-size:15px;cursor:pointer;padding:0}
+.pbar .back{border:1px solid rgba(255,255,255,.3);border-radius:6px;background:transparent;color:#fff;padding:5px 12px;font-size:13px;cursor:pointer}
+.pbar .back:hover{background:rgba(255,255,255,.08)}
+.wrap860{max-width:860px;margin:0 auto;padding-left:max(24px,env(safe-area-inset-left,0px));padding-right:max(24px,env(safe-area-inset-right,0px))}
+@media (max-width:560px){.wrap860{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}}
+article.page{padding-block:28px 56px;display:flex;flex-direction:column;gap:18px}
+article.page .phd{display:flex;flex-direction:column;gap:10px}
+article.page h1{margin:0;font-size:26px;font-weight:700;line-height:1.35;text-wrap:pretty}
+article.page .lead{margin:0;font-size:16px;color:var(--slate);text-wrap:pretty}
+article.page .tabs{padding:0}
+article.page .tab{padding:10px 14px;font-size:15px}
+article.page .dbody{padding:0;overflow:visible}
+article.page .dbody li{font-size:15px;padding:12px 14px}
+article.page .dfoot{padding:14px 0 0}
+</style>
+</head>
+<body>
+
+
+<div id="pageRoot" hidden></div>
+<div id="listRoot">
+<header class="top">
+  <div class="in">
+    <div class="brandline"><h1>자료 정리함</h1><span id="count">불러오는 중</span></div>
+    <input type="search" id="q" placeholder="제목 · 내용 · 태그로 찾기" aria-label="검색">
+    <button type="button" class="btn-dark" id="toggleAdd">+ 링크 추가</button>
+  </div>
+</header>
+
+<div class="addpanel" id="addPanel" hidden>
+  <form class="in" id="addForm">
+    <div class="field">
+      <label for="urls">링크 붙여넣기</label>
+      <textarea id="urls" rows="3" placeholder="주소를 붙여 넣으세요. 여러 개는 줄바꿈으로 구분합니다."></textarea>
+      <label for="body" style="margin-top:6px">본문 붙여넣기 <span class="hint" style="font-weight:400">(선택 · 링크 1개일 때 본문 함께 저장)</span></label>
+      <textarea id="body" rows="4" placeholder="원문 내용을 붙여 넣으면 링크와 함께 저장합니다. AI 요약은 아직 연결 전입니다."></textarea>
+    </div>
+    <div class="addside">
+      <select id="addBrand" aria-label="브랜드 선택"></select>
+      <select id="addCat" aria-label="주제 선택"></select>
+      <input type="text" id="newCat" placeholder="새 분류명" aria-label="새 분류명" hidden>
+      <button type="submit" class="btn-slate" id="addBtn">목록에 추가</button>
+      <span class="msg" id="msg"></span>
+      <span class="hint" id="addHint" hidden>파일로 연 화면이라 이 브라우저에만 저장되며, 본문 요약은 claude.ai 링크에서 열었을 때 동작합니다.</span>
+    </div>
+  </form>
+</div>
+
+<div class="in"><nav class="chips" id="chips" aria-label="브랜드"></nav></div>
+<main class="in" id="main">
+  <div class="empty"><b>목록을 불러오는 중입니다</b><span>저장된 자료를 가져오고 있습니다.</span></div>
+</main>
+<div id="drawerRoot"></div>
+</div>
+
+<script type="module">
+import * as cloud from "./firebase-store.js";
+(() => {
+const BASE_CATS = ["Claude 업무 활용","Claude Code 확장","시각화 · 도식","업무 자동화","기타"];
+const BRANDS = ["Claude","ChatGPT","Gemini","Perplexity","기타"];
+const BRAND_RX = [["Claude",/claude|클로드|anthropic|코워크/i],["ChatGPT",/chatgpt|gpt|openai|지피티|챗지피티/i],["Gemini",/gemini|제미나이|bard/i],["Perplexity",/perplexity|퍼플렉시티/i]];
+const detectBrand = t => { for (const [b,rx] of BRAND_RX) if (rx.test(t||"")) return b; return "기타"; };
+const TABS = [["points","핵심 내용"],["actions","바로 써볼 것"],["cautions","주의 · 조건"]];
+const FAV = "__fav";
+
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const arr = v => Array.isArray(v) ? v.map(String).filter(Boolean) : [];
+function cleanUrl(u){ try{ const x=new URL(u.trim()); ["fbclid","usp","utm_source","utm_medium","utm_campaign","utm_content","utm_term","igshid","si"].forEach(k=>x.searchParams.delete(k)); return x.toString(); }catch(e){ return null; } }
+function sourceOf(u){ try{ const h=new URL(u).hostname.replace(/^www\./,""); if(/drive\.google|docs\.google/.test(h)) return "Google Drive"; if(/notion/.test(h)) return "Notion"; if(/youtu/.test(h)) return "YouTube"; if(/instagram/.test(h)) return "Instagram"; return h; }catch(e){ return "링크"; } }
+function parseLinks(text){
+  const out=[], seen=new Set(); let rest=text, m; const md=/\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)/g;
+  while((m=md.exec(text))){ const u=cleanUrl(m[2]); if(u&&!seen.has(u)){ seen.add(u); out.push({url:u,title:m[1].replace(/\s*-\s*Google Drive$/,"").trim()}); } rest=rest.replace(m[0]," "); }
+  (rest.match(/https?:\/\/[^\s<>"')\]]+/g)||[]).forEach(r=>{ const u=cleanUrl(r); if(u&&!seen.has(u)){ seen.add(u); out.push({url:u,title:""}); } });
+  return out;
+}
+const searchText = i => [i.title,i.summary,i.category,i.source,i.brand,...arr(i.points),...arr(i.actions),...arr(i.cautions),...arr(i.tags)].join(" ").toLowerCase();
+const shortDate = s => (s||"").slice(5,10).replace("-",".");
+const today = () => { const t=new Date(); return `${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,"0")}-${String(t.getDate()).padStart(2,"0")}`; };
+
+let db=null, sample=null, raw=[], loaded=false, cloudReady=false, cloudStatus="Firebase 연결 중";
+const st = { current:"전체", query:"", sel:null, tab:"points", armed:false, busy:new Set(), drafts:{} };
+
+function items(){
+  return raw.map(i => ({ ...i, category:i.category||"기타", brand:i.brand||detectBrand([i.title,i.url,i.summary,...arr(i.tags)].join(" ")), fav:!!i.fav }));
+}
+const brandsOf = list => { const s=new Set(BRANDS); list.forEach(i=>s.add(i.brand)); return [...s]; };
+const catsOf = list => { const s=new Set(BASE_CATS); list.forEach(i=>s.add(i.category)); return [...s]; };
+const sortFn = (a,b) => (b.fav-a.fav) || a.category.localeCompare(b.category) || (b.added||"").localeCompare(a.added||"");
+const msg = t => { $("#msg").textContent = t; };
+
+async function write(id, data){
+  if (!db) return false;
+  try{ await db.collection("links").doc(id).update(data); return true; }
+  catch(e){ msg("저장하지 못했습니다. 이 페이지에 대한 편집 권한이 있는지 확인해 주세요."); return false; }
+}
+
+/* ---------- 목록 ---------- */
+function renderList(){
+  const list = items();
+  const pend = list.filter(i=>i.status==="pending").length;
+  $("#count").textContent = loaded ? `${list.length}건 · 요약 대기 ${pend}` : cloudStatus;
+
+  const brands = brandsOf(list);
+  const counts = {}; list.forEach(i=>counts[i.brand]=(counts[i.brand]||0)+1);
+  const favN = list.filter(i=>i.fav).length;
+  const nav = ["전체", ...(favN?[FAV]:[]), ...brands.filter(b=>counts[b])];
+  if (!nav.includes(st.current)) st.current = "전체";
+  $("#chips").innerHTML = nav.map(c => {
+    const label = c===FAV ? '<span class="st">★</span><span>즐겨찾기</span>' : `<span>${esc(c)}</span>`;
+    const n = c==="전체" ? list.length : c===FAV ? favN : counts[c];
+    return `<button type="button" class="chip" data-chip="${esc(c)}" aria-pressed="${c===st.current}">${label}<span class="n">${n}</span></button>`;
+  }).join("");
+
+  const q = st.query.trim().toLowerCase();
+  const shown = list.filter(i => (st.current==="전체" || (st.current===FAV ? i.fav : i.brand===st.current)) && (!q || searchText(i).includes(q)));
+  const groups = brands.filter(b => shown.some(i=>i.brand===b));
+  const main = $("#main");
+  if (!loaded) return;
+  if (!groups.length){
+    main.innerHTML = `<div class="empty"><b>${list.length ? "조건에 맞는 자료가 없습니다" : "아직 정리된 자료가 없습니다"}</b><span>${list.length ? (st.current===FAV ? "카드의 ☆를 눌러 즐겨찾기에 추가해 보세요." : "검색어나 분류를 바꿔 보세요.") : "위의 '+ 링크 추가'로 시작합니다."}</span></div>`;
+    return;
+  }
+  main.innerHTML = groups.map(b => {
+    const g = shown.filter(i=>i.brand===b).sort(sortFn);
+    return `<section class="group"><div class="ghead"><h2>${esc(b)}</h2><span>${g.length}건</span></div><div class="cards">${g.map(card).join("")}</div></section>`;
+  }).join("");
+}
+
+function card(i){
+  const pend = i.status==="pending";
+  const busy = st.busy.has(i.id);
+  const sum = busy ? "요약을 만드는 중입니다…" : pend ? "AI 요약 연결 전입니다. 원문과 본문을 보관할 수 있습니다." : (i.summary||"");
+  const foot = pend ? "정리 필요" : `핵심 ${arr(i.points).length} · 써볼 것 ${arr(i.actions).length} · 주의 ${arr(i.cautions).length}`;
+  return `<div class="card" role="button" tabindex="0" data-open="${esc(i.id)}" aria-current="${st.sel===i.id}">
+    <button type="button" class="star" data-fav="${esc(i.id)}" aria-pressed="${i.fav}" aria-label="${i.fav?"즐겨찾기 해제":"즐겨찾기"}" title="${i.fav?"즐겨찾기 해제":"즐겨찾기"}">${i.fav?"★":"☆"}</button>
+    <div class="cmeta"><span class="cat">${esc(i.category)}</span><span class="src">${esc(i.source||sourceOf(i.url))}</span><span>${esc(shortDate(i.added))} 추가</span>${pend?'<span class="pend">요약 대기</span>':""}</div>
+    <div class="ctitle">${esc(i.title||"제목 미확인")}</div>
+    <div class="csum">${esc(sum)}</div>
+    <div class="cfoot"><span>${esc(foot)}</span><b>요약 보기 →</b></div>
+  </div>`;
+}
+
+/* ---------- 요약 패널 · 전용 페이지 공통 ---------- */
+function bodyHtml(sel){
+  const pend = sel.status==="pending";
+  const tabItems = arr(sel[st.tab]);
+  const busy = st.busy.has(sel.id);
+  if (pend && !tabItems.length){
+    const draft = st.drafts[sel.id] ?? sel.rawText ?? "";
+    return `<div class="fill">
+      <p>${sample ? "아직 정리되지 않은 링크입니다. '원문 열기'로 내용을 복사해 아래에 붙여 넣고 '요약 생성'을 누르면 핵심 · 써볼 것 · 주의 조건이 채워집니다." : "AI 요약은 아직 연결 전입니다. 아래 본문은 자료와 함께 저장할 수 있습니다."}</p>
+      ${true ? `<textarea id="fillText" rows="8" placeholder="원문 본문 붙여넣기">${esc(draft)}</textarea>
+      <div class="row"><button type="button" class="btn-slate" id="fillBtn" ${busy?"disabled":""}>${busy?"저장 중…":sample?"요약 생성":"본문 저장"}</button><span class="hint" id="fillMsg"></span></div>` : ""}
+    </div>`;
+  }
+  return `<ul>${tabItems.map(s => { const m=/^\[([^\]]{1,40})\]\s*/.exec(s); return `<li>${m?`<span class="loc">${esc(m[1])}</span>`:""}<span>${esc(m?s.slice(m[0].length):s)}</span></li>`; }).join("")}</ul>`;
+}
+function metaHtml(sel){
+  return `<div class="dmeta"><span class="b">${esc(sel.brand)}</span><span class="c">${esc(sel.category)}</span><span>${esc(sel.source||sourceOf(sel.url))}</span><span>${esc(shortDate(sel.added))} 추가</span>${sel.status==="pending"?'<span class="pend">요약 대기</span>':""}</div>`;
+}
+function toolsHtml(sel, list, withPageBtn){
+  const brands = brandsOf(list), cats = catsOf(list);
+  return `<div class="dtools">
+    <a class="open" href="${esc(sel.url)}" target="_blank" rel="noopener">원문 열기 ↗</a>
+    ${withPageBtn ? `<button type="button" class="pagebtn" data-page="${esc(sel.id)}">새 창으로 보기</button>` : ""}
+    <button type="button" class="favbtn" data-fav="${esc(sel.id)}" aria-pressed="${sel.fav}">${sel.fav?"★ 즐겨찾기됨":"☆ 즐겨찾기"}</button>
+    <select id="selBrand" aria-label="브랜드 변경">${brands.map(b=>`<option value="${esc(b)}" ${b===sel.brand?"selected":""}>브랜드: ${esc(b)}</option>`).join("")}</select>
+    <select id="selCat" aria-label="분류 변경">${cats.map(c=>`<option value="${esc(c)}" ${c===sel.category?"selected":""}>분류: ${esc(c)}</option>`).join("")}</select>
+  </div>`;
+}
+function tabsHtml(sel){
+  return `<div class="tabs" role="tablist">${TABS.map(([k,l])=>`<button type="button" class="tab" role="tab" data-tab="${k}" aria-selected="${k===st.tab}"><span>${l}</span><span class="n">${arr(sel[k]).length}</span></button>`).join("")}</div>`;
+}
+function footHtml(sel){
+  return `<div class="dfoot">
+    <div class="tags">${arr(sel.tags).map(t=>`<span>#${esc(t)}</span>`).join("")}</div>
+    <button type="button" class="btn-line danger" id="delBtn" data-armed="${st.armed}">${st.armed?"삭제 확인 (되돌릴 수 없음)":"삭제"}</button>
+  </div>`;
+}
+
+function renderDrawer(){
+  const root = $("#drawerRoot");
+  const list = items();
+  const sel = st.page ? null : list.find(i=>i.id===st.sel);
+  if (!sel){ root.innerHTML = ""; return; }
+  const prevScroll = root.querySelector(".dbody")?.scrollTop || 0;
+  const sibs = list.filter(i=>i.brand===sel.brand).sort(sortFn);
+  root.innerHTML = `<div class="scrim" data-close></div>
+  <aside class="drawer" role="dialog" aria-modal="true" aria-label="요약">
+    <div class="dmain">
+      <div class="dhead">
+        <div class="drow">${metaHtml(sel)}<button type="button" class="close" data-close aria-label="닫기">×</button></div>
+        <h2>${esc(sel.title||"제목 미확인")}</h2>
+        ${sel.summary?`<p>${esc(sel.summary)}</p>`:""}
+        ${toolsHtml(sel, list, true)}
+      </div>
+      ${tabsHtml(sel)}
+      <div class="dbody ${st.tab==="cautions"?"warn":""}">${bodyHtml(sel)}</div>
+      ${footHtml(sel)}
+    </div>
+    <nav class="sibs" aria-label="같은 브랜드 자료">
+      <div class="h"><b>${esc(sel.brand)} 자료 목록</b><span>${sibs.length}건</span></div>
+      <div class="l">${sibs.map(s=>`<button type="button" class="sib" data-sib="${esc(s.id)}" aria-current="${s.id===sel.id}"><span class="c">${s.fav?"★ ":""}${esc(s.category)}</span><span class="t">${esc(s.title||"제목 미확인")}</span></button>`).join("")}</div>
+    </nav>
+  </aside>`;
+  const b = root.querySelector(".dbody"); if (b) b.scrollTop = prevScroll;
+  root.querySelector(".scrim").style.animation = st._noAnim ? "none" : "";
+  root.querySelector(".drawer").style.animation = st._noAnim ? "none" : "";
+}
+
+function renderPage(){
+  const root = $("#pageRoot"), listRoot = $("#listRoot");
+  if (!st.page){ root.hidden = true; root.innerHTML = ""; listRoot.hidden = false; return; }
+  listRoot.hidden = true; root.hidden = false;
+  const list = items();
+  const sel = list.find(i=>i.id===st.page);
+  const bar = `<header class="pbar"><div class="wrap860"><button type="button" class="home" data-back>자료 정리함</button><button type="button" class="back" data-back>← 목록으로</button></div></header>`;
+  if (!loaded){ root.innerHTML = bar + `<div class="wrap860"><div class="empty"><b>불러오는 중입니다</b></div></div>`; return; }
+  if (!sel){ root.innerHTML = bar + `<div class="wrap860"><div class="empty"><b>자료를 찾을 수 없습니다</b><span>삭제된 자료일 수 있습니다. '목록으로'를 눌러 돌아가 주세요.</span></div></div>`; return; }
+  document.title = (sel.title||"자료") + " · 자료 정리함";
+  root.innerHTML = bar + `<article class="page wrap860">
+    <div class="phd">
+      ${metaHtml(sel)}
+      <h1>${esc(sel.title||"제목 미확인")}</h1>
+      ${sel.summary?`<p class="lead">${esc(sel.summary)}</p>`:""}
+      ${toolsHtml(sel, list, false)}
+    </div>
+    ${tabsHtml(sel)}
+    <div class="dbody ${st.tab==="cautions"?"warn":""}">${bodyHtml(sel)}</div>
+    ${footHtml(sel)}
+  </article>`;
+}
+
+function render(){ renderPage(); renderList(); renderDrawer(); st._noAnim = !!st.sel; }
+
+function goPage(id){
+  st.page = id; st.sel = null; st.tab = "points"; st.armed = false;
+  try{ if (location.hash !== "#"+id) history.pushState(null, "", "#"+id); }catch(e){}
+  render(); window.scrollTo(0,0);
+}
+function goList(){
+  const from = st.page; st.page = null; st.armed = false; document.title = "자료 정리함";
+  try{ if (location.hash) history.pushState(null, "", location.pathname + location.search); }catch(e){}
+  render();
+  const c = from && document.querySelector(`.card[data-open="${CSS.escape(from)}"]`); if (c) c.scrollIntoView({ block:"center" });
+}
+const hashId = () => { const h = (location.hash||"").slice(1); return /^[A-Za-z0-9._~-]{1,200}$/.test(h) ? h : null; };
+window.addEventListener("hashchange", () => { const h = hashId(); if (h !== st.page){ st.page = h; st.sel = null; st.armed = false; if (!h) document.title = "자료 정리함"; render(); } });
+window.addEventListener("popstate", () => { const h = hashId(); if (h !== st.page){ st.page = h; st.sel = null; st.armed = false; if (!h) document.title = "자료 정리함"; render(); } });
+st.page = hashId();
+
+
+function openItem(id){ st.sel=id; st.tab="points"; st.armed=false; st._noAnim=false; render(); }
+function closeDrawer(){ st.sel=null; st.armed=false; render(); }
+
+/* ---------- 이벤트 ---------- */
+document.addEventListener("click", async e => {
+  const t = e.target.closest("[data-fav],[data-open],[data-chip],[data-close],[data-tab],[data-sib],[data-page],[data-back],#delBtn,#fillBtn");
+  if (!t) return;
+  if (t.dataset.fav){ e.stopPropagation(); const i=items().find(x=>x.id===t.dataset.fav); if(i) await write(i.id,{ fav:!i.fav }); return; }
+  if (t.dataset.open){ openItem(t.dataset.open); return; }
+  if (t.dataset.page){ goPage(t.dataset.page); return; }
+  if (t.hasAttribute("data-back")){ goList(); return; }
+  if (t.dataset.chip){ st.current=t.dataset.chip; renderList(); return; }
+  if (t.hasAttribute("data-close")){ closeDrawer(); return; }
+  if (t.dataset.tab){ st.tab=t.dataset.tab; st.page ? renderPage() : renderDrawer(); return; }
+  if (t.dataset.sib){ st.sel=t.dataset.sib; st.tab="points"; st.armed=false; render(); return; }
+  if (t.id==="delBtn"){
+    const redraw = () => st.page ? renderPage() : renderDrawer();
+    if (!st.armed){ st.armed=true; redraw(); clearTimeout(st._armT); st._armT=setTimeout(()=>{ st.armed=false; redraw(); },4000); return; }
+    clearTimeout(st._armT); const id=st.page||st.sel;
+    try{ await db.collection("links").doc(id).delete(); st.armed=false; if (st.page) goList(); else { st.sel=null; render(); } }
+    catch(err){ st.armed=false; redraw(); msg("삭제하지 못했습니다. 편집 권한을 확인해 주세요."); }
+    return;
+  }
+  if (t.id==="fillBtn"){ const i=items().find(x=>x.id===(st.page||st.sel)); if(i) { if(sample) summarize(i, $("#fillText").value); else { const ok=await write(i.id,{rawText:$("#fillText").value}); const result=$("#fillMsg"); if(result) result.textContent=ok?"본문 저장 완료":"저장하지 못했습니다. 다시 시도해 주세요."; } } }
+});
+document.addEventListener("keydown", e => {
+  if (e.key==="Escape" && st.sel && !st.page) closeDrawer();
+  if ((e.key==="Enter"||e.key===" ") && e.target.matches?.(".card")){ e.preventDefault(); openItem(e.target.dataset.open); }
+});
+document.addEventListener("input", e => { const id=st.page||st.sel; if (e.target.id==="fillText" && id) st.drafts[id]=e.target.value; });
+document.addEventListener("change", async e => {
+  const id = st.page||st.sel;
+  if (e.target.id==="selBrand" && id) await write(id,{ brand:e.target.value });
+  if (e.target.id==="selCat" && id) await write(id,{ category:e.target.value });
+  if (e.target.id==="addCat") $("#newCat").hidden = e.target.value!=="__new";
+});
+let qt; $("#q").addEventListener("input", e => { clearTimeout(qt); qt=setTimeout(()=>{ st.query=e.target.value; renderList(); },150); });
+$("#toggleAdd").addEventListener("click", async () => {
+  if (!cloudReady) { $("#count").textContent=cloudStatus; return; }
+  if (!db) {
+    $("#toggleAdd").disabled=true;
+    try { await cloud.login(); }
+    catch(e) { $("#count").textContent="로그인하지 못했습니다. 다시 시도해 주세요."; }
+    finally { $("#toggleAdd").disabled=false; }
+    return;
+  }
+  const p=$("#addPanel"); p.hidden=!p.hidden; $("#toggleAdd").textContent = p.hidden ? "+ 링크 추가" : "닫기"; msg("");
+  if (!p.hidden){ fillAddSelects(); $("#urls").focus(); }
+});
+function fillAddSelects(){
+  const list=items(), brands=brandsOf(list), cats=catsOf(list);
+  const ab=$("#addBrand"), ac=$("#addCat"), kb=ab.value, kc=ac.value;
+  ab.innerHTML = `<option value="auto">브랜드: 자동 인식</option>` + brands.map(b=>`<option value="${esc(b)}">브랜드: ${esc(b)}</option>`).join("");
+  ac.innerHTML = `<option value="auto">분류: 요약 시 자동 지정</option>` + cats.map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join("") + `<option value="__new">+ 새 분류 만들기</option>`;
+  if (kb) ab.value=kb; if (kc) ac.value=kc;
+  $("#newCat").hidden = ac.value!=="__new";
+}
+
+$("#addForm").addEventListener("submit", async e => {
+  e.preventDefault();
+  if (!db){ msg("Firebase 저장소에 연결되지 않았습니다. 로그인과 접근 권한을 확인해 주세요."); return; }
+  const input=$("#urls").value.trim();
+  if(input.startsWith("{")) {
+    $("#addBtn").disabled=true;
+    try {
+      const result=await cloud.importBackup(input);
+      $("#urls").value="";
+      msg(`가져오기 완료 · 추가 ${result.added}건 · 기존 ID 유지 ${result.skipped}건`);
+    } catch(error) { msg("가져오기 실패 · 입력은 보존했습니다. 백업 형식과 연결을 확인해 주세요."); }
+    finally { $("#addBtn").disabled=false; }
+    return;
+  }
+  const links = parseLinks($("#urls").value);
+  if (!links.length){ msg("주소를 찾지 못했습니다. http로 시작하는 주소를 넣어 주세요."); return; }
+  let cat = $("#addCat").value;
+  if (cat==="__new"){ cat=$("#newCat").value.trim(); if(!cat){ msg("새 분류명을 입력해 주세요."); return; } }
+  const brandSel = $("#addBrand").value;
+  const body = $("#body").value.trim();
+  const have = new Set(items().map(i=>i.url));
+  const fresh = links.filter(l=>!have.has(l.url));
+  const dup = links.length-fresh.length;
+  if (!fresh.length){ msg(`이미 목록에 있는 주소입니다 (${dup}건).`); return; }
+  $("#addBtn").disabled = true;
+  try{
+    const refs=[];
+    for (const [k,l] of fresh.entries()){
+      refs.push(await db.collection("links").add({
+        url:l.url, title:l.title||l.url, source:sourceOf(l.url),
+        category: cat==="auto" ? "기타" : cat, catAuto: cat==="auto",
+        brand: brandSel==="auto" ? detectBrand(l.title+" "+l.url) : brandSel, brandAuto: brandSel==="auto",
+        added: today(), addedAt: new Date(Date.now()-k).toISOString(), status:"pending", fav:false,
+        summary:"", points:[], actions:[], cautions:[], tags:[], rawText:fresh.length===1 ? body : ""
+      }));
+    }
+    $("#urls").value=""; $("#newCat").value="";
+    msg(`${fresh.length}건 추가${dup?` · 중복 ${dup}건 제외`:""}`);
+    st.current="전체"; st.query=""; $("#q").value="";
+    if (fresh.length===1 && body && sample){
+      $("#body").value="";
+      const id=refs[0].id;
+      st.sel=id; st.tab="points"; st._noAnim=false; render();
+      summarize({ id, url:fresh[0].url, title:fresh[0].title, catAuto: cat==="auto", brandAuto: brandSel==="auto" }, body);
+    } else if (body && fresh.length===1){
+      $("#body").value=""; msg("링크와 본문 저장 완료 · AI 요약은 아직 연결 전입니다.");
+    } else if (body && fresh.length>1){
+      msg(`${fresh.length}건 추가 · 본문 요약은 링크 1개일 때만 됩니다. 각 카드를 열어 붙여 넣어 주세요.`);
+    }
+  }catch(err){
+    msg(err && err.code==="quota_exceeded" ? "저장 공간이 가득 찼습니다. 오래된 자료를 삭제한 뒤 다시 추가해 주세요." : "추가하지 못했습니다. 이 페이지에 대한 편집 권한이 있는지 확인해 주세요.");
+  }finally{ $("#addBtn").disabled=false; }
+});
+
+/* ---------- 요약 ---------- */
+const PROMPT = (i, body, cats) => `다음 자료를 업무용 '자료 정리함' 항목으로 요약한다.
+규칙:
+- 한국어 실무 문어체(명사형 종결, 예: "~구성", "~필요"). "~하기/~해요" 같은 구어체 종결 금지.
+- 조건·단서·예외·제약은 생략하지 말고 cautions에 모두 넣는다.
+- points와 cautions 각 항목 앞에 원문 위치를 대괄호로 표기한다(예: "[STEP 2]", "[p.3]", "[설치 방법]"). 위치를 알 수 없으면 생략.
+- 원문 문장을 길게 그대로 옮기지 말고 압축해서 다시 쓴다. 원문에 없는 내용은 지어내지 않는다.
+- category는 가능하면 다음 중에서 고른다: ${cats.join(", ")}. 맞는 것이 없을 때만 새 분류명(짧게).
+- brand는 자료가 다루는 AI 도구: Claude, ChatGPT, Gemini, Perplexity, 기타 중 하나.
+다음 JSON 객체 하나만 답한다:
+{"title":"자료 제목","category":"분류","brand":"브랜드","summary":"한 줄 요약(80자 이내)","points":["[위치] 핵심 내용"],"actions":["바로 해 볼 수 있는 구체 행동"],"cautions":["[위치] 주의·조건·제약"],"tags":["태그"]}
+points 4~10개, actions 2~5개, cautions는 원문에 있는 만큼, tags 3~5개.
+
+참고 제목: ${i.title || "미확인"}
+주소: ${i.url}
+본문:
+${body.slice(0, 80000)}`;
+
+async function summarize(i, body){
+  body = (body||"").trim();
+  const fm = t => { const n=$("#fillMsg"); if(n) n.textContent=t; else msg(t); };
+  if (!body){ fm("요약할 본문이 비어 있습니다. 원문 내용을 붙여 넣어 주세요."); return; }
+  if (!sample || !db){ fm("이 화면에서는 Claude 요약을 쓸 수 없습니다."); return; }
+  st.drafts[i.id] = body;
+  st.busy.add(i.id); render();
+  try{
+    const r = await sample.json(PROMPT(i, body, catsOf(items())), { modelTier:"default" });
+    if (!r || typeof r!=="object" || Array.isArray(r)) throw { code:"invalid_json" };
+    const cur = raw.find(x=>x.id===i.id) || {};
+    const upd = {
+      title: String(r.title || i.title || "제목 미확인"),
+      summary: String(r.summary||""),
+      points: arr(r.points), actions: arr(r.actions), cautions: arr(r.cautions), tags: arr(r.tags),
+      status: "done", rawText: ""
+    };
+    if (cur.catAuto !== false && r.category) upd.category = String(r.category);
+    if (cur.brandAuto !== false && r.brand) upd.brand = BRANDS.includes(String(r.brand)) ? String(r.brand) : detectBrand(String(r.brand));
+    await db.collection("links").doc(i.id).update(upd);
+    delete st.drafts[i.id];
+    msg(`'${upd.title}' 정리 완료`);
+  }catch(e){
+    const c = e && e.code;
+    const t = c==="not_granted"||c==="sampling_disabled" ? "이 페이지의 Claude 사용이 허용되지 않았습니다. 채팅에서 Claude에게 정리를 요청해 주세요."
+      : c==="rate_limited" ? "요청이 많아 잠시 후 다시 눌러 주세요."
+      : c==="prompt_too_large" ? "본문이 너무 깁니다. 핵심 부분만 붙여 넣어 주세요."
+      : c==="cancelled" ? "" : "요약을 만들지 못했습니다. 다시 눌러 주세요.";
+    if (c==="not_granted"||c==="sampling_disabled") sample=null;
+    st.busy.delete(i.id); render(); fm(t); return;
+  }
+  st.busy.delete(i.id); render();
+}
+
+
+/* ---------- Firebase 연결: 실패 시 로컬 저장으로 전환하지 않음 ---------- */
+let unsubscribe=null, accountVersion=0;
+function connectionState(message) {
+  cloudStatus=message; loaded=false;
+  $("#count").textContent=message;
+  $("#main").innerHTML='<div class="empty"><b>'+esc(message)+'</b></div>';
+}
+(async () => {
+  try {
+    await cloud.initialize(); cloudReady=true;
+    cloud.watchAccount(async user => {
+      const version=++accountVersion;
+      if (unsubscribe) { unsubscribe(); unsubscribe=null; }
+      db=null; raw=[]; loaded=false;
+      st.sel=null; st.page=null; st.drafts={}; st.busy.clear();
+      $("#urls").value=""; $("#body").value=""; $("#newCat").value="";
+      $("#addPanel").hidden=true;
+      render();
+      if (!user) {
+        $("#toggleAdd").disabled=false;
+        $("#toggleAdd").textContent="Google 로그인";
+        connectionState("Google 로그인 후 자료를 불러옵니다."); return;
+      }
+      $("#toggleAdd").textContent="+ 링크 추가";
+      $("#toggleAdd").disabled=true;
+      connectionState("Firebase에서 자료를 확인하고 있습니다.");
+      try {
+      if (version!==accountVersion) return;
+      db=cloud.database();
+      const hint=$("#addHint"); hint.hidden=false;
+      hint.textContent="이 계정의 자료는 Firebase에 저장됩니다. 백업 JSON은 링크 칸에 붙여넣어 가져올 수 있습니다. AI 요약은 아직 연결 전입니다.";
+      unsubscribe=db.collection("links").onSnapshot(snap => {
+        $("#toggleAdd").disabled=false;
+        raw=snap.docs.map(d => ({...d.data(),id:d.id})); loaded=true;
+        if (st.sel && !raw.some(x=>x.id===st.sel)) st.sel=null;
+        render();
+        if (!$("#addPanel").hidden) fillAddSelects();
+      }, error => {
+        db=null; raw=[]; st.sel=null; st.page=null; render();
+        $("#toggleAdd").disabled=true;
+        connectionState(error.code==="permission-denied" ? "이 계정의 자료 접근 승인이 필요합니다." : "Firebase 조회 실패 · 연결 확인 후 새로 열어 주세요.");
+      });
+      } catch(error) {
+        if (version!==accountVersion) return;
+        db=null;
+        $("#toggleAdd").disabled=true;
+        connectionState(error.code==="permission-denied" ? "이 계정의 자료 접근 승인이 필요합니다." : "초기 자료 확인 실패 · 연결 확인 후 새로 열어 주세요.");
+      }
+    });
+  } catch(error) {
+    $("#toggleAdd").disabled=true;
+    connectionState(error.message || "Firebase 연결 실패 · 새로 열어 주세요.");
+  }
+})();
+})();
+</script>
+
+</body>
+</html>

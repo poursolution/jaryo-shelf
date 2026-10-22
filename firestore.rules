@@ -1,0 +1,29 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function owner(uid) {
+      return request.auth != null && request.auth.uid == uid &&
+        exists(/databases/$(database)/documents/allowedUsers/$(request.auth.uid));
+    }
+    match /users/{uid}/links/{linkId} {
+      allow read, delete: if owner(uid);
+      allow create, update: if owner(uid) &&
+        request.resource.data.title is string &&
+        request.resource.data.url is string &&
+        request.resource.data.url.matches('https?://.*') &&
+        request.resource.data.status in ['pending', 'done'];
+    }
+    match /users/{uid}/meta/initial-import {
+      allow read: if owner(uid);
+      allow create: if owner(uid) &&
+        request.resource.data.keys().hasOnly(['version', 'recordCount']) &&
+        request.resource.data.version == 1 &&
+        request.resource.data.recordCount is int &&
+        request.resource.data.recordCount >= 0 &&
+        request.resource.data.recordCount <= 100;
+    }
+    // allowedUsers must be provisioned in the Firebase console by an admin.
+    // Clients cannot grant access to themselves or others.
+    match /{document=**} { allow read, write: if false; }
+  }
+}

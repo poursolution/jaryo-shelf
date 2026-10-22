@@ -1,0 +1,7 @@
+PRIVATE-*
+CLAUDE_HANDOFF.md
+page-syntax-check.mjs
+*.jpg
+*.png
+.env*
+node_modules/
